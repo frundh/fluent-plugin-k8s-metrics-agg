@@ -1,3 +1,11 @@
+FROM circleci/ruby:2.6.1-node-browsers AS build
+COPY . /src
+WORKDIR /src
+
+USER root
+
+RUN .circleci/install_dep.sh && rake build -t -v
+
 FROM alpine:3.8
 
 LABEL maintainer="Splunk Inc. <DataEdge@splunk.com>"
@@ -9,7 +17,7 @@ ENV VERSION=${VERSION}
 ENV DUMB_INIT_VERSION=1.2.1
 ENV SU_EXEC_VERSION=0.2
 
-COPY *.gem /tmp/
+COPY --from=build /src/pkg/*.gem /tmp
 
 ARG DEBIAN_FRONTEND=noninteractive
 # Do not split this into multiple RUN!
@@ -46,7 +54,7 @@ ENV LD_PRELOAD="" \
     FLUENTD_OPT="" \
     DUMB_INIT_SETSID=0
 
-COPY entrypoint.sh /bin/entrypoint.sh
+COPY docker/entrypoint.sh /bin/entrypoint.sh
 ENTRYPOINT ["/bin/entrypoint.sh"]
 
 CMD exec fluentd -c /fluentd/etc/${FLUENTD_CONF} -p /fluentd/plugins $FLUENTD_OPT

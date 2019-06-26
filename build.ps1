@@ -1,0 +1,1 @@
+docker build -f .\docker\Dockerfile --build-arg VERSION=1.1.0 -t splunk/fluent-plugin-kubernetes-metrics-agg:1.1.0-ea9c5b .
